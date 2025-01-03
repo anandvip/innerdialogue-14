@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inner Dialogue Journal</title>
-    <style>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inner Dialogue Journal</title>
+       <style>
         /* Theme Variables */
         :root {
             /* Light Theme */
@@ -274,6 +281,29 @@
 
     <!-- Firebase and Application Script -->
     <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            onAuthStateChanged, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            getDocs, 
+            setDoc, 
+            addDoc, 
+            deleteDoc,
+            query, 
+            where,
+            orderBy,
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
         // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyB00L-6PsCK5LMAVbUPXgNNF0BywlZKqwk",
@@ -285,9 +315,9 @@
         };
 
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // Theme Management
         const themeToggle = document.getElementById('theme-toggle');
@@ -317,9 +347,9 @@
             if (!user) return;
 
             try {
-                await db.collection('users').doc(user.uid).collection('entries').add({
+                await addDoc(collection(db, 'users', user.uid, 'entries'), {
                     content,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    timestamp: serverTimestamp()
                 });
                 journalText.value = '';
                 loadEntries();
@@ -334,12 +364,11 @@
             if (!user) return;
 
             try {
-                const querySnapshot = await db.collection('users').doc(user.uid).collection('entries')
-                    .orderBy('timestamp', 'desc')
-                    .get();
+                const q = query(collection(db, 'users', user.uid, 'entries'), orderBy('timestamp', 'desc'));
+                const querySnapshot = await getDocs(q);
                 entriesContainer.innerHTML = querySnapshot.docs.map(doc => `
                     <div class="entry-card">
-                        <h4>${doc.data().timestamp.toDate().toLocaleString()}</h4>
+                        <h4>${doc.data().timestamp?.toDate().toLocaleString()}</h4>
                         <p>${doc.data().content}</p>
                         <button onclick="deleteEntry('${doc.id}')">Delete</button>
                     </div>
@@ -355,7 +384,7 @@
             if (!user) return;
 
             try {
-                await db.collection('users').doc(user.uid).collection('entries').doc(entryId).delete();
+                await deleteDoc(doc(db, 'users', user.uid, 'entries', entryId));
                 loadEntries();
             } catch (error) {
                 console.error('Error deleting entry:', error);
@@ -363,7 +392,7 @@
         };
 
         // Authentication State Listener
-        auth.onAuthStateChanged(user => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('user-avatar').src = user.photoURL;
                 document.getElementById('user-name').textContent = user.displayName;
@@ -379,7 +408,7 @@
 
         // Sign Out
         document.getElementById('sign-out-button').addEventListener('click', () => {
-            auth.signOut();
+            signOut(auth);
         });
     </script>
 </body>
