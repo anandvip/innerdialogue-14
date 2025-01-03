@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inner Dialogue Journal</title>
+    <style>
+        /* Theme Variables */
+        :root {
+            /* Light Theme */
+            --light-bg: #f8f9fa;
+            --light-surface: #ffffff;
+            --light-text: #2c3e50;
+            --light-text-secondary: #6c757d;
+            --light-border: #dee2e6;
+            --light-hover: #e9ecef;
+
+            /* Dark Theme */
+            --dark-bg: #1a1a1a;
+            --dark-surface: #2d2d2d;
+            --dark-text: #e9ecef;
+            --dark-text-secondary: #adb5bd;
+            --dark-border: #404040;
+            --dark-hover: #404040;
+
+            /* Common Colors */
+            --primary: #228be6;
+            --primary-hover: #1c7ed6;
+            --danger: #fa5252;
+            --success: #40c057;
+
+            /* Transitions */
+            --transition-speed: 0.3s;
+        }
+
+        /* Theme Application */
+        :root[data-theme="light"] {
+            --bg: var(--light-bg);
+            --surface: var(--light-surface);
+            --text: var(--light-text);
+            --text-secondary: var(--light-text-secondary);
+            --border: var(--light-border);
+            --hover: var(--light-hover);
+        }
+
+        :root[data-theme="dark"] {
+            --bg: var(--dark-bg);
+            --surface: var(--dark-surface);
+            --text: var(--dark-text);
+            --text-secondary: var(--dark-text-secondary);
+            --border: var(--dark-border);
+            --hover: var(--dark-hover);
+        }
+
+        /* Core Styles */
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: background var(--transition-speed), color var(--transition-speed);
+        }
+
+        /* Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 400px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Navigation Panel */
+        .nav-panel {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            text-align: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .profile-section img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            border: 3px solid var(--surface);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Entry Grid */
+        .entry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .entry-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .entry-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Editor Panel */
+        .editor-panel {
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* AI Prompt Section */
+        .ai-prompt-section {
+            background: var(--bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+
+        /* Analytics Panel */
+        .analytics-panel {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 250px 1fr;
+            }
+
+            .editor-panel {
+                position: fixed;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 400px;
+                transform: translateX(100%);
+                transition: transform var(--transition-speed);
+            }
+
+            .editor-panel.active {
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-panel {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                transition: transform var(--transition-speed);
+            }
+
+            .nav-panel.active {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Application Template -->
+    <div class="app-container">
+        <!-- Navigation Panel -->
+        <nav class="nav-panel">
+            <!-- Profile Section -->
+            <div class="profile-section">
+                <img id="user-avatar" src="/api/placeholder/80/80" alt="Profile Picture">
+                <h3 id="user-name">Loading...</h3>
+                <p id="user-email"></p>
+                <button id="sign-out-button" class="button button-secondary">Sign Out</button>
+            </div>
+
+            <!-- Year/Month Navigation -->
+            <div id="entry-navigation"></div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="content-header">
+                <h2 id="current-view-title">Recent Entries</h2>
+                <div class="view-controls">
+                    <button id="grid-view" class="button button-secondary">Grid</button>
+                    <button id="list-view" class="button button-secondary">List</button>
+                </div>
+            </div>
+
+            <!-- Entry Grid/List -->
+            <div id="entries-container" class="entry-grid"></div>
+        </main>
+
+        <!-- Editor Panel -->
+        <aside class="editor-panel">
+            <!-- AI Prompt Section -->
+            <section class="ai-prompt-section">
+                <h3>Get Writing Inspiration</h3>
+                <div class="prompt-controls">
+                    <input type="text" id="ai-keywords" placeholder="What's on your mind?">
+                    <select id="ai-provider">
+                        <option value="openai">OpenAI</option>
+                        <option value="mistral">Mistral AI</option>
+                        <option value="gemini">Gemini</option>
+                    </select>
+                    <button id="generate-prompt" class="button button-primary">Generate Prompt</button>
+                </div>
+                <div id="generated-prompt" class="generated-prompt"></div>
+            </section>
+
+            <!-- Journal Editor -->
+            <section class="journal-editor">
+                <textarea id="journal-text" placeholder="Start writing your thoughts here..." rows="10"></textarea>
+                <button id="save-entry" class="button button-primary">Save Entry</button>
+            </section>
+
+            <!-- Analytics Panel -->
+            <section class="analytics-panel">
+                <h3>Insights & Analysis</h3>
+                <div class="analytics-chart"></div>
+                <button id="generate-analysis" class="button button-secondary">Generate Analysis Report</button>
+            </section>
+        </aside>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="theme-toggle">🌓</button>
+
+    <!-- Firebase and Application Script -->
+    <script type="module">
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB00L-6PsCK5LMAVbUPXgNNF0BywlZKqwk",
+            authDomain: "weekly-journal-9df9c.firebaseapp.com",
+            projectId: "weekly-journal-9df9c",
+            storageBucket: "weekly-journal-9df9c.appspot.com",
+            messagingSenderId: "267644429656",
+            appId: "1:267644429656:web:8a5b8a73960f9adf5af12d"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Theme Management
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            themeToggle.textContent = newTheme === 'light' ? '🌙' : '☀️';
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Initialize Theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.textContent = savedTheme === 'light' ? '🌙' : '☀️';
+
+        // Entry Management
+        const saveEntryButton = document.getElementById('save-entry');
+        const journalText = document.getElementById('journal-text');
+        const entriesContainer = document.getElementById('entries-container');
+
+        saveEntryButton.addEventListener('click', async () => {
+            const content = journalText.value.trim();
+            if (!content) return;
+
+            const user = auth.currentUser;
+            if (!user) return;
+
+            try {
+                await db.collection('users').doc(user.uid).collection('entries').add({
+                    content,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                journalText.value = '';
+                loadEntries();
+            } catch (error) {
+                console.error('Error saving entry:', error);
+            }
+        });
+
+        // Load Entries
+        const loadEntries = async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            try {
+                const querySnapshot = await db.collection('users').doc(user.uid).collection('entries')
+                    .orderBy('timestamp', 'desc')
+                    .get();
+                entriesContainer.innerHTML = querySnapshot.docs.map(doc => `
+                    <div class="entry-card">
+                        <h4>${doc.data().timestamp.toDate().toLocaleString()}</h4>
+                        <p>${doc.data().content}</p>
+                        <button onclick="deleteEntry('${doc.id}')">Delete</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading entries:', error);
+            }
+        };
+
+        // Delete Entry
+        window.deleteEntry = async (entryId) => {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            try {
+                await db.collection('users').doc(user.uid).collection('entries').doc(entryId).delete();
+                loadEntries();
+            } catch (error) {
+                console.error('Error deleting entry:', error);
+            }
+        };
+
+        // Authentication State Listener
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('user-avatar').src = user.photoURL;
+                document.getElementById('user-name').textContent = user.displayName;
+                document.getElementById('user-email').textContent = user.email;
+                loadEntries();
+            } else {
+                document.getElementById('user-avatar').src = '/api/placeholder/80/80';
+                document.getElementById('user-name').textContent = 'Loading...';
+                document.getElementById('user-email').textContent = '';
+                entriesContainer.innerHTML = '';
+            }
+        });
+
+        // Sign Out
+        document.getElementById('sign-out-button').addEventListener('click', () => {
+            auth.signOut();
+        });
+    </script>
+</body>
+</html>
